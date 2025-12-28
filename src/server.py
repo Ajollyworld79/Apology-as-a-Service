@@ -1,3 +1,9 @@
+# Apology-as-a-Service - MCP Server
+# Created by Gustav Christensen
+# Date: December 2025
+# Description: Model Context Protocol (MCP) server that provides context-aware apologies for AI agents
+#              Features multiple severity levels, styles (including Haiku), and crisis management prompts.
+
 from mcp.server.fastmcp import FastMCP
 from enum import Enum
 import random

@@ -70,9 +70,21 @@ This server is configured to run via **SSE (Server-Sent Events)** when deployed,
 2. Just push to a repo connected to Railway.
 3. It listens on port 8000 (or `$PORT`).
 
+## How to trigger it (Example Prompts)
+Once connected to an agent (like Claude), you can simply describe your predicament:
+
+- **"I just accidentally deleted the production database. Generate a haiku apology."**
+  -> *Triggers: severity=CRITICAL, style=HAIKU*
+
+- **"I'm late for the meeting because my cat was sleeping on my lap. Make it sound professional."**
+  -> *Triggers: severity=MINOR, style=PROFESSIONAL*
+
+- **"I forgot my anniversary. Help me save my marriage!"**
+  -> *Triggers: save_my_ass(incident="forgot anniversary")*
+
 ## Examples
 
-**Input:**
+**Input (Tool Call):**
 `severity="CRITICAL", style="HAIKU", context="deleted the main database"`
 
 **Output:**

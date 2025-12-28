@@ -330,6 +330,31 @@ def save_my_ass(incident_description: str) -> str:
     For each option, explain why it works and what the risk is.
     """
 
+# --- DEMO ENDPOINT (For live demo button on portfolio) ---
+# Since this server is running FastMCP (based on Starlette/FastAPI), we can attach
+# a regular HTTP endpoint for simple GET requests, bypassing complex SSE validation
+# which can be tricky with simple fetch clients or proxies.
+
+try:
+    # mcp.fastapi_app is the underlying FastAPI/Starlette application
+    # We add a route to it.
+    @mcp._http_app.get("/demo")
+    async def demo_endpoint(severity: str = "MINOR", style: str = "CASUAL", context: str = "demo"):
+        try:
+            sev = Severity(severity.upper())
+        except ValueError:
+            sev = Severity.MINOR
+            
+        try:
+            sty = Style(style.upper())
+        except ValueError:
+            sty = Style.CASUAL
+            
+        text = generate_apology(sev, sty, context)
+        return {"text": text}
+except Exception as e:
+    print(f"Could not attach demo endpoint: {e}")
+
 if __name__ == "__main__":
     # Import uvicorn here to avoid dependency if imported at top level for stdio
     import uvicorn

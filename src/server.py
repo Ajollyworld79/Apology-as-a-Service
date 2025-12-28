@@ -330,59 +330,47 @@ def save_my_ass(incident_description: str) -> str:
     For each option, explain why it works and what the risk is.
     """
 
-# --- DEMO ENDPOINT (For live demo button on portfolio) ---
-# Since this server is running FastMCP (based on Starlette/FastAPI), we can attach
-# a regular HTTP endpoint for simple GET requests, bypassing complex SSE validation
-# which can be tricky with simple fetch clients or proxies.
+# --- SERVER CONFIGURATION ---
+import uvicorn
+from starlette.applications import Starlette
+from starlette.routing import Route, Mount
+from starlette.responses import JSONResponse
 
-try:
-    # mcp.fastapi_app is the underlying FastAPI/Starlette application
-    # We add a route to it.
+async def demo_endpoint(request):
+    params = request.query_params
+    severity = params.get("severity", "MINOR")
+    style = params.get("style", "CASUAL")
+    context = params.get("context", "demo")
     
-    # Use getattr to bypass static analysis if _http_app is protected but available
-    app_instance = getattr(mcp, "_http_app", None)
-    
-    if app_instance:
-        @app_instance.get("/demo")
-        async def demo_endpoint(severity: str = "MINOR", style: str = "CASUAL", context: str = "demo"):
-            try:
-                sev = Severity(severity.upper())
-            except ValueError:
-                sev = Severity.MINOR
-                
-            try:
-                sty = Style(style.upper())
-            except ValueError:
-                sty = Style.CASUAL
-                
-            text = generate_apology(sev, sty, context)
-            return {"text": text}
-    else:
-        print("Warning: Could not access underlying HTTP app for demo route")
+    try:
+        sev = Severity(severity.upper())
+    except ValueError:
+        sev = Severity.MINOR
         
-except Exception as e:
-    print(f"Could not attach demo endpoint: {e}")
+    try:
+        sty = Style(style.upper())
+    except ValueError:
+        sty = Style.CASUAL
+        
+    text = generate_apology(sev, sty, context)
+    return JSONResponse({"text": text})
 
 if __name__ == "__main__":
-    # Import uvicorn here to avoid dependency if imported at top level for stdio
-    import uvicorn
     import os
-    
-    # Check if we are running in an environment that expects a web server (like Railway)
-    # or if we are running locally with stdio
     port = int(os.environ.get("PORT", 8000))
     
-    # FastMCP uses Starlette/Uvicorn under the hood for SSE
-    # We can just run it directly if we want stdio, but for Railway we need SSE
-    # Currently FastMCP's .run() defaults to stdio unless configured otherwise
-    # But to make it robust for deployment, we can use the inspect capability or just start the SSE server
-    
     print(f"Starting Apology-as-a-Service on port {port}...")
-    # mcp.run(transport="sse", port=port, host="0.0.0.0") 
-    # Note: As of current MCP version, .run() might default to stdio.
-    # We will use the explicit settings_http approach if available, or just run.
     
-    mcp.settings.port = port
-    mcp.settings.host = "0.0.0.0"
-    mcp.settings.debug = True # Enable debug to help with SSE validation issues
-    mcp.run(transport='sse')
+    # Create a custom Starlette app to host both the SSE endpoint and the demo endpoint
+    # FastMCP provides .sse_app which is an ASGI app handling the SSE connection
+    
+    sse_app = mcp.sse_app
+    
+    routes = [
+        Route("/demo", demo_endpoint),
+        Mount("/sse", sse_app), # Mount MCP SSE on /sse
+    ]
+    
+    app = Starlette(debug=True, routes=routes)
+    
+    uvicorn.run(app, host="0.0.0.0", port=port)

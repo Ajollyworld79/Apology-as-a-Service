@@ -351,4 +351,5 @@ if __name__ == "__main__":
     
     mcp.settings.port = port
     mcp.settings.host = "0.0.0.0"
+    mcp.settings.debug = True # Enable debug to help with SSE validation issues
     mcp.run(transport='sse')

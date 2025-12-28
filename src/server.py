@@ -362,9 +362,9 @@ if __name__ == "__main__":
     print(f"Starting Apology-as-a-Service on port {port}...")
     
     # Create a custom Starlette app to host both the SSE endpoint and the demo endpoint
-    # FastMCP provides .sse_app which is an ASGI app handling the SSE connection
+    # FastMCP provides .sse_app() which creates and returns an ASGI app handling the SSE connection
     
-    sse_app = mcp.sse_app
+    sse_app = mcp.sse_app()
     
     routes = [
         Route("/demo", demo_endpoint),

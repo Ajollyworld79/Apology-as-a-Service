@@ -331,4 +331,24 @@ def save_my_ass(incident_description: str) -> str:
     """
 
 if __name__ == "__main__":
-    mcp.run()
+    # Import uvicorn here to avoid dependency if imported at top level for stdio
+    import uvicorn
+    import os
+    
+    # Check if we are running in an environment that expects a web server (like Railway)
+    # or if we are running locally with stdio
+    port = int(os.environ.get("PORT", 8000))
+    
+    # FastMCP uses Starlette/Uvicorn under the hood for SSE
+    # We can just run it directly if we want stdio, but for Railway we need SSE
+    # Currently FastMCP's .run() defaults to stdio unless configured otherwise
+    # But to make it robust for deployment, we can use the inspect capability or just start the SSE server
+    
+    print(f"Starting Apology-as-a-Service on port {port}...")
+    # mcp.run(transport="sse", port=port, host="0.0.0.0") 
+    # Note: As of current MCP version, .run() might default to stdio.
+    # We will use the explicit settings_http approach if available, or just run.
+    
+    mcp.settings.port = port
+    mcp.settings.host = "0.0.0.0"
+    mcp.run(transport='sse')

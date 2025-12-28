@@ -2,6 +2,8 @@
 
 **"Because sometimes, 'my bad' just isn't enough."**
 
+🟢 **Live SSE Endpoint:** `https://apology-as-a-service-production.up.railway.app/sse`
+
 This is a Model Context Protocol (MCP) server that provides highly sophisticated, context-aware apologies for AI agents. Whether you broke the build, forgot an anniversary, or accidentally deleted the production database, AaaS has you covered.
 
 Now with **Server-Sent Events (SSE)** support for easy deployment!

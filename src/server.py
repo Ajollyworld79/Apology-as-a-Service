@@ -5,11 +5,18 @@
 #              tooling to grade and escalate apologies. Supports both Streamable HTTP
 #              (current MCP transport) and SSE (legacy) for backward compatibility.
 
+import contextlib
 import os
 import random
 import re
 
+import uvicorn
 from mcp.server.fastmcp import FastMCP
+from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import HTMLResponse, JSONResponse
+from starlette.routing import BaseRoute, Route
 
 from .templates import TEMPLATES, Severity, Style
 
@@ -178,14 +185,6 @@ def save_my_ass(incident_description: str) -> str:
 
 # --- SERVER CONFIGURATION ---
 
-import uvicorn
-from starlette.applications import Starlette
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import HTMLResponse, JSONResponse
-from starlette.routing import BaseRoute, Mount, Route
-
-
 _ROOT_HTML = """<!doctype html>
 <html lang="en">
 <head>
@@ -254,36 +253,47 @@ async def demo_endpoint(request):
     return JSONResponse({"text": _render(sev, sty, context, recipient)})
 
 
-def _build_routes() -> list[BaseRoute]:
+def _build_app() -> Starlette:
+    # The transport sub-apps already serve at /mcp, /sse and /messages internally,
+    # so their routes are merged into the top-level app instead of being mounted
+    # under a prefix (mounting would have produced /mcp/mcp and /sse/sse).
+    streamable_app = mcp.streamable_http_app()
+    sse_app = mcp.sse_app()
+
     routes: list[BaseRoute] = [
         Route("/", root_endpoint),
         Route("/health", health_endpoint),
         Route("/demo", demo_endpoint),
+        *streamable_app.routes,
+        *sse_app.routes,
     ]
 
-    # Streamable HTTP is the current MCP transport. Older MCP SDKs don't have it,
-    # so fall back silently if the method isn't available.
-    try:
-        routes.append(Mount("/mcp", mcp.streamable_http_app()))
-    except AttributeError:
-        pass
-
-    routes.append(Mount("/sse", mcp.sse_app()))
-    return routes
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    print(f"Starting Apology-as-a-Service on port {port}...")
+    # The Streamable HTTP session manager only works while its run() context is
+    # active. Starlette does not run lifespans of sub-apps, so it is wired into
+    # the top-level app's lifespan here.
+    @contextlib.asynccontextmanager
+    async def lifespan(app: Starlette):
+        async with mcp.session_manager.run():
+            yield
 
     middleware = [
         Middleware(
             CORSMiddleware,
             allow_origins=["*"],
-            allow_methods=["GET", "POST", "OPTIONS"],
+            # DELETE is used by Streamable HTTP clients to terminate sessions.
+            allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
             allow_headers=["*"],
+            # Browser clients must be able to read the session id header.
+            expose_headers=["Mcp-Session-Id"],
         ),
     ]
 
-    app = Starlette(debug=False, routes=_build_routes(), middleware=middleware)
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    return Starlette(
+        debug=False, routes=routes, middleware=middleware, lifespan=lifespan
+    )
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Starting Apology-as-a-Service on port {port}...")
+    uvicorn.run(_build_app(), host="0.0.0.0", port=port)

@@ -42,7 +42,8 @@ def generate_apology(
         severity: How bad did you mess up? (TRIVIAL to NUCLEAR)
         style: The tone of the apology. Includes PROFESSIONAL, CASUAL, POETIC,
                GROVELING, HAIKU, LEGAL_DISCLAIMER, CORPORATE_DOUBLESPEAK,
-               SHAKESPEAREAN, PIRATE.
+               SHAKESPEAREAN, PIRATE, PASSIVE_AGGRESSIVE, GEN_Z, VIKING,
+               ROBOT, EXISTENTIAL, SOAP_OPERA.
         context: What specifically went wrong? (e.g. "the production database",
                  "your wedding anniversary")
         recipient: Who are we apologizing to?

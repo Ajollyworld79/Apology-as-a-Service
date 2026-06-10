@@ -37,6 +37,12 @@ The original. Generates the perfect apology for any situation.
 - `CORPORATE_DOUBLESPEAK` — *"mistakes were made, learnings have been captured"*
 - `SHAKESPEAREAN` — *"Et tu, prod database? Then fall, mine career."*
 - `PIRATE` — *"Arrr, the database be at the bottom of Davy Jones' locker."*
+- `PASSIVE_AGGRESSIVE` — *"Sorry about the outage. I flagged this risk three weeks ago, but sure, let's all act surprised."*
+- `GEN_Z` — *"the prod db is cooked and it's my fault. locking in, do not perceive me."*
+- `VIKING` — *"Ragnarök has come early for the database, and I am the one who loosed the wolf."*
+- `ROBOT` — *"ERROR: backups not found. ERROR: dignity not found. Apology: found, and offered at maximum amplitude."*
+- `EXISTENTIAL` — *"Nietzsche warned me about the abyss. He never mentioned it had a DROP TABLE statement."*
+- `SOAP_OPERA` — *"It wasn't a hacker. It wasn't bad luck. It was me, the trusted one, all along."*
 
 #### `escalation_ladder(context, style="PROFESSIONAL", recipient="Client")`
 
